@@ -43,6 +43,15 @@ This example, unmodified, will run the create a `report.md` file with the output
 
 The crew-implementation Crew is composed of multiple AI agents, each with unique roles, goals, and tools. These agents collaborate on a series of tasks, defined in `config/tasks.yaml`, leveraging their collective skills to achieve complex objectives. The `config/agents.yaml` file outlines the capabilities and configurations of each agent in your crew.
 
+### Specialized Document Processors
+
+- **DOCX Processor**: Converts DOCX documents into Markdown format.
+- **CSV Processor**: Transforms CSV files into Markdown tables.
+- **PDF Processor**: Extracts and converts PDF content into Markdown.
+- **Plain Text Processor**: Processes plain text files into Markdown format.
+- **Excel Processor**: Converts Excel spreadsheets into Markdown tables.
+- **Image Processor**: Extracts text from images (e.g., JPG, PNG) using OCR and formats it into Markdown.
+
 ## Support
 
 For support, questions, or feedback regarding the CrewImplementation Crew or crewAI.
