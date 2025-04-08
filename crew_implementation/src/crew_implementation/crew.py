@@ -116,3 +116,6 @@ class CrewImplementation():
             verbose=True,
             # process=Process.hierarchical, # In case you wanna use that instead https://docs.crewai.com/how-to/Hierarchical/
         )
+    
+    def __init__(self, inputs:str):
+        self.input = inputs
