@@ -125,23 +125,51 @@ def run_query():
         try:
             # First, do a direct test retrieval for debugging
             from utils.chromadb_utils import retrieve_markdown_chunks
+            from utils.source_validator import validate_sources
+            
             print("\n🔬 Debug retrieval before crew processing:")
             docs, metas, error = retrieve_markdown_chunks(CHAT_ID, query)
+            
+            # Extract actual sources for validation
+            actual_sources = []
+            for meta in metas:
+                source = meta.get("source", "unknown")
+                if source not in actual_sources:
+                    actual_sources.append(source)
             
             if error:
                 print(f"⚠️ Debug retrieval encountered an error: {error}")
             else:
                 print(f"✅ Debug retrieval found {len(docs)} documents")
+                print("\n📄 Document sources:")
+                for i, meta in enumerate(metas):
+                    print(f"  {i+1}. {meta.get('source', 'unknown')}")
+                print("\n📝 First document preview:")
+                if docs:
+                    preview = docs[0][:200] + "..." if len(docs[0]) > 200 else docs[0]
+                    print(preview)
+            
+            # Check if we're just debugging or actually running the query
+            if "--debug-only" in query:
+                continue
                 
             # Now proceed with the crew-based processing
+            print("\n⏳ Starting crew processing with pre-fetched data...")
             factory = CrewFactory()
             crew = factory.create_query_crew(query, CHAT_ID)
+            
+            # Add explicit debugging statement
+            print("\n📤 Sending data to crew agents...")
+            
             result = crew.kickoff()
             
-            # Check if the result indicates no relevant information was found
-            if "No relevant information was found" in result or "No documents found" in result:
-                print("\n⚠️ " + result)
-            else:
+            # Add validation step after getting result
+            if not "No relevant information was found" in result and not "No documents found" in result:
+                is_valid, corrected_result = validate_sources(result, actual_sources)
+                if not is_valid:
+                    print("\n⚠️ Found unauthorized sources in response. Correcting...")
+                    result = corrected_result
+                    
                 print("\n💡 Final Answer:\n", result)
 
                 # Extract file attributions from the result
@@ -157,6 +185,90 @@ def run_query():
 
         except Exception as e:
             print(f"❌ Query failed: {e}")
+            import traceback
+            traceback.print_exc()
+
+def view_file_content():
+    """
+    View the entire content of a specific file in the database.
+    """
+    try:
+        from utils.chromadb_utils import get_chroma_client
+        client = get_chroma_client()
+        collections = client.list_collections()
+        
+        if not collections:
+            print("\n⚠️ No collections found in the database.")
+            return
+            
+        # List collections for selection
+        print("\n📁 Available collections:")
+        for idx, collection in enumerate(collections):
+            print(f"  {idx+1}. {collection.name}")
+        
+        # Select collection
+        while True:
+            try:
+                coll_idx = input("\nSelect collection number (or 'back' to return): ")
+                if coll_idx.lower() == 'back':
+                    return
+                    
+                coll_idx = int(coll_idx) - 1
+                if 0 <= coll_idx < len(collections):
+                    selected_collection = collections[coll_idx]
+                    break
+                else:
+                    print("❌ Invalid selection. Please try again.")
+            except ValueError:
+                print("❌ Please enter a valid number.")
+        
+        # Get documents in the selected collection
+        try:
+            coll = client.get_collection(selected_collection.name)
+            count = coll.count()
+            
+            if count == 0:
+                print(f"\n⚠️ Collection '{selected_collection.name}' is empty.")
+                return
+                
+            # Display documents in the collection
+            all_docs = coll.get()
+            metadatas = all_docs.get("metadatas", [])
+            ids = all_docs.get("ids", [])
+            documents = all_docs.get("documents", [])
+            
+            print(f"\n📄 Documents in '{selected_collection.name}':")
+            for i, (doc_id, metadata) in enumerate(zip(ids, metadatas)):
+                source = metadata.get("source", "unknown")
+                print(f"  {i+1}. {source} (ID: {doc_id})")
+            
+            # Select document to view
+            while True:
+                try:
+                    doc_idx = input("\nSelect document number to view content (or 'back' to return): ")
+                    if doc_idx.lower() == 'back':
+                        return
+                        
+                    doc_idx = int(doc_idx) - 1
+                    if 0 <= doc_idx < len(ids):
+                        # Display full content of the selected document
+                        print("\n" + "="*80)
+                        print(f"📝 Full content of '{metadatas[doc_idx].get('source', 'unknown')}':")
+                        print("="*80)
+                        print(documents[doc_idx])
+                        print("="*80)
+                        
+                        input("\nPress Enter to continue...")
+                        break
+                    else:
+                        print("❌ Invalid selection. Please try again.")
+                except ValueError:
+                    print("❌ Please enter a valid number.")
+                    
+        except Exception as e:
+            print(f"\n❌ Error accessing collection: {str(e)}")
+    except Exception as e:
+        print(f"\n❌ Error listing database contents: {str(e)}")
 
 if __name__ == "__main__":
     os.makedirs(UPLOAD_DIR, exist_ok=True)
@@ -164,15 +276,16 @@ if __name__ == "__main__":
     while True:
         print("""
         =========================================
-           🧠 Autonomous Document Intelligence
+                        DocuThing
         =========================================
         1. Ingest documents
         2. Query the knowledge base
         3. View database contents
-        4. Exit
+        4. View file content
+        5. Exit
         """)
 
-        choice = input("Enter your choice (1-4): ")
+        choice = input("Enter your choice (1-5): ")
         
         if choice == '1':
             run_ingestion()
@@ -181,6 +294,8 @@ if __name__ == "__main__":
         elif choice == '3':
             list_db_contents()
         elif choice == '4':
+            view_file_content()
+        elif choice == '5':
             print("Goodbye!")
             break
         else:

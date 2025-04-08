@@ -1,9 +1,42 @@
 from crewai import Task
 from agents import query_classifier, schema_agent, retrieval_agent, synthesis_agent
 from utils.chromadb_utils import retrieve_markdown_chunks
+import json
 
 # Input: query string and chat_id for context filtering
 def create_query_tasks(query: str, chat_id: str):
+    # Pre-fetch documents for debugging and direct use
+    print("\n🔄 Pre-fetching documents for query debugging...")
+    documents, metadatas, error_message = retrieve_markdown_chunks(chat_id, query, n_results=10)
+    
+    # Extract and validate actual source document names
+    actual_sources = []
+    for metadata in metadatas:
+        source = metadata.get("source", "unknown")
+        if source not in actual_sources:
+            actual_sources.append(source)
+    
+    # Create document-source pairs with explicit validation
+    formatted_docs = []
+    for i, (doc, meta) in enumerate(zip(documents, metadatas)):
+        source = meta.get("source", "unknown")
+        formatted_docs.append(f"===== DOCUMENT {i+1} =====\nSOURCE FILE: {source}\n\nCONTENT:\n{doc}\n\n")
+    
+    # Join formatted documents with clear separators
+    all_docs_text = "\n\n".join(formatted_docs)
+    
+    # Strict source list as a separate context item
+    strict_source_list = "AUTHORIZED SOURCE FILES (ONLY these may be referenced):\n" + "\n".join([f"- {s}" for s in actual_sources])
+    
+    # Include pre-fetched documents in the task context
+    debug_info = {
+        "documents_found": len(documents),
+        "document_sources": actual_sources,
+        "error_message": error_message,
+    }
+    print(f"Debug info: {debug_info}")
+    
+    # Start with query classification
     classify_task = Task(
         description=f"Classify the query: '{query}'",
         expected_output="Type of query (e.g., factual, comparative, summary, tabular, etc.)",
@@ -21,45 +54,20 @@ def create_query_tasks(query: str, chat_id: str):
                 "value": chat_id,
                 "description": "Chat session identifier", 
                 "expected_output": "Session tracking ID"
-            }
-        ]
-    )
-
-    schema_task = Task(
-        description=f"Generate a structured schema/plan for answering: '{query}'",
-        expected_output="Schema outlining what info is needed and how to fetch/format it",
-        agent=schema_agent,
-        async_execution=False,
-        context=[
-            {
-                "key": "query", 
-                "value": query, 
-                "description": "User query to create schema for", 
-                "expected_output": "Answer schema"
             },
             {
-                "key": "chat_id", 
-                "value": chat_id,
-                "description": "Chat session identifier", 
-                "expected_output": "Session tracking ID"
+                "key": "available_sources", 
+                "value": str(actual_sources),
+                "description": "List of available document sources", 
+                "expected_output": "Available document sources"
             }
         ]
     )
 
-    # Pre-fetch documents for debugging and direct use
-    print("\n🔄 Pre-fetching documents for debugging...")
-    documents, metadatas, error_message = retrieve_markdown_chunks(chat_id, query)
-    
-    # Include pre-fetched documents in the task context
-    debug_info = {
-        "documents_found": len(documents),
-        "document_sources": [m.get("source", "unknown") for m in metadatas] if metadatas else [],
-        "error_message": error_message
-    }
-    
+    # Retrieval task with explicit source validation
     retrieval_task = Task(
-        description=f"Retrieve relevant documents for: '{query}' from chat {chat_id}",
-        expected_output="Chunks of relevant markdown text from ChromaDB, along with their source file names. If no relevant information is found, report this clearly.",
+        description=f"Retrieve relevant documents for: '{query}'. ONLY reference documents from this EXACT list of authorized sources: {actual_sources}",
+        expected_output="Relevant document chunks with their exact source filenames",
         agent=retrieval_agent,
         async_execution=False,
         context=[
@@ -76,39 +84,86 @@ def create_query_tasks(query: str, chat_id: str):
                 "expected_output": "Session tracking ID"
             },
             {
-                "key": "pre_fetched_debug", 
-                "value": str(debug_info),
-                "description": "Debug information from pre-fetched documents", 
-                "expected_output": "Debug information"
+                "key": "strict_source_list",
+                "value": strict_source_list,
+                "description": "The ONLY file sources that may be referenced - no exceptions",
+                "expected_output": "Verified source list"
+            },
+            {
+                "key": "document_content",
+                "value": all_docs_text,
+                "description": "Pre-fetched document content with sources",
+                "expected_output": "Document content with sources"
             }
-        ]
+        ],
+        dependencies=[classify_task]
     )
 
+    # Synthesis task with strict source validation
     synthesis_task = Task(
-        description=f"Synthesize answer to: '{query}'. Also, identify the files used to generate the answer and rank them based on their contribution to the result.",
-        expected_output="Final structured output/answer, along with a ranked list of source files.",
-        agent=synthesis_agent,
-        async_execution=False,
-        context=[
-            {
-                "key": "query", 
-                "value": query, 
-                "description": "User query to synthesize answer for", 
-                "expected_output": "Final answer"
-            },
-            {
-                "key": "chat_id", 
-                "value": chat_id,
-                "description": "Chat session identifier", 
-                "expected_output": "Session tracking ID"
-            },
-            {
-                "key": "debug_info", 
-                "value": str(debug_info),
-                "description": "Debug information about document retrieval", 
-                "expected_output": "Debug information"
-            }
-        ]
-    )
+    description=f"""
+    Synthesize a response to the query: '{query}'.
 
-    return [classify_task, schema_task, retrieval_task, synthesis_task]
+    ⚠️ IMPORTANT:
+    - You MUST only use the content provided in the 'docs' context below.
+    - DO NOT use any external or prior knowledge not found in the provided documents.
+    - Cite source filenames (if relevant) from the AUTHORIZED SOURCE LIST ONLY: {actual_sources}
+    """,
+    expected_output="A precise, accurate answer based only on the fetched document content",
+    agent=synthesis_agent,
+    async_execution=False,
+    context=[
+        {
+            "key": "query",
+            "value": query,
+            "description": "The original query to be answered",
+            "expected_output": "A restatement or refined version of the query"
+        },
+        {
+            "key": "docs",
+            "value": all_docs_text,
+            "description": "The full content of documents retrieved from the database",
+            "expected_output": "Chunks of text relevant to the query"
+        },
+        {                
+            "key": "authorized_sources",
+            "value": "\n".join(actual_sources),
+            "description": "The only files allowed to be referenced",
+            "expected_output": "List of filenames"
+        }
+    ]
+)
+
+    
+    if "complex" in query.lower() or "compare" in query.lower() or "analyze" in query.lower() or "statistics" in query.lower():
+        schema_task = Task(
+            description=f"Generate a structured schema for answering: '{query}'",
+            expected_output="Schema outlining what info is needed",
+            agent=schema_agent,
+            async_execution=False,
+            context=[
+                {
+                    "key": "query", 
+                    "value": query, 
+                    "description": "User query to create schema for", 
+                    "expected_output": "Answer schema"
+                },
+                {
+                    "key": "chat_id", 
+                    "value": chat_id,
+                    "description": "Chat session identifier", 
+                    "expected_output": "Session tracking ID"
+                },
+                {
+                    "key": "available_sources",
+                    "value": str(actual_sources),
+                    "description": "Available document sources",
+                    "expected_output": "Available document sources"
+                }
+            ],
+            dependencies=[classify_task]
+        )
+        return [classify_task, schema_task, retrieval_task, synthesis_task]
+    else:
+        # For simple queries, skip schema generation
+        return [classify_task, retrieval_task, synthesis_task]

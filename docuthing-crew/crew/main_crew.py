@@ -9,8 +9,7 @@ class CrewFactory:
         crew = Crew(
             agents=[task.agent for task in tasks],
             tasks=tasks,
-            verbose=True
-            # Removed process=tasks[0].agent.process_type
+            verbose=True,
         )
         return crew
 
@@ -19,7 +18,11 @@ class CrewFactory:
         crew = Crew(
             agents=[task.agent for task in tasks],
             tasks=tasks,
-            verbose=True
-            # Removed process=tasks[0].agent.process_type
+            verbose=True,
+            process="sequential",
+            share_crew_output=True,
+            # Remove any memory or callback settings that might trigger ChromaDB
+            # memory=True,  # Removing this line
+            # callbacks=[]  # Removing this line
         )
         return crew
