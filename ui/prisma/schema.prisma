@@ -19,15 +19,18 @@ datasource db {
 model User {
     id String @id @default(cuid())
 
-    name          String?
-    email         String?   @unique
+    name          String
+    email         String    @unique
     emailVerified DateTime?
     image         String?
+    password      String?
 
-    UsageStats UsageStats?
+    accounts Account[]
+    sessions Session[]
 
-    Accounts   Account[]
-    Sessions   Session[]
+    UsageStats   UsageStats?
+    UserSettings UserSettings?
+
     Collection Collection[]
     Prompt     Prompt[]
     Dataset    Dataset[]
@@ -52,7 +55,7 @@ model Account {
     refresh_token_expires_in Int?
 
     userId String
-    User   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+    user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
@@ -67,7 +70,7 @@ model Session {
     expires      DateTime
 
     userId String
-    User   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+    user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
@@ -82,6 +85,27 @@ model VerificationToken {
     updatedAt DateTime @updatedAt
 
     @@unique([identifier, token])
+}
+
+model AppSettings {
+    id String @id @default(cuid())
+
+    howItWorks Json
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model UserSettings {
+    userId String @id @unique
+    User   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    defaultExportFormat DocumentType @default(CSV)
+    hideSensitiveData   Boolean      @default(false)
+    emailNotifications  Boolean      @default(false)
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 }
 
 model Collection {
@@ -117,20 +141,6 @@ model Document {
     updatedAt DateTime @updatedAt
 }
 
-enum DocumentType {
-    PDF
-    DOCX
-    IMAGE
-    OTHER
-}
-
-enum DocumentStatus {
-    PENDING
-    PROCESSING
-    COMPLETE
-    FAILED
-}
-
 model AgentRun {
     id String @id @default(cuid())
 
@@ -147,13 +157,6 @@ model AgentRun {
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
-}
-
-enum AgentRunStatus {
-    PENDING
-    RUNNING
-    FAILED
-    COMPLETE
 }
 
 model Prompt {
@@ -211,4 +214,28 @@ model UsageStats {
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
+}
+
+enum DocumentType {
+    CSV
+    JSON
+    TXT
+    PDF
+    DOCX
+    IMAGE
+    OTHER
+}
+
+enum DocumentStatus {
+    PENDING
+    PROCESSING
+    COMPLETE
+    FAILED
+}
+
+enum AgentRunStatus {
+    PENDING
+    RUNNING
+    FAILED
+    COMPLETE
 }

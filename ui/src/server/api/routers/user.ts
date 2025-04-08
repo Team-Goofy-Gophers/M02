@@ -10,6 +10,12 @@ export const userRouter = createTRPCRouter({
         where: {
           id: ctx.session.user.id,
         },
+        select: {
+          name: true,
+          email: true,
+          image: true,
+        }
       })
     }),
+
 });

@@ -3,6 +3,8 @@ import { type DefaultSession, type NextAuthConfig } from "next-auth";
 import { env } from "~/env";
 import { db } from "~/server/db";
 import GoogleProvider from "next-auth/providers/google";
+import CredentialsProvider from "next-auth/providers/credentials";
+import { hashAndSalt } from "~/lib/utils";
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -32,6 +34,33 @@ declare module "next-auth" {
  */
 export const authConfig = {
   providers: [
+    CredentialsProvider({
+      credentials: {
+        email: { label: "Email", type: "text" },
+        password: { label: "Password", type: "password" },
+      },
+      authorize: async (credentials, req) => {
+        const { email, password } = credentials as {
+          email: string;
+          password: string;
+        };
+        const user = await db.user.findFirst({
+          where: {
+            email,
+          },
+        });
+        if (!user) {
+          throw new Error("No user found");
+        }
+        if (!user.password) {
+          throw new Error("User has no password");
+        }
+        if (user.password !== await hashAndSalt(password)) {
+          throw new Error("Invalid password");
+        }
+        return user;
+      },
+    }),
     GoogleProvider({
       clientId: env.AUTH_GOOGLE_CLIENT_ID,
       clientSecret: env.AUTH_GOOGLE_CLIENT_SECRET,
@@ -56,4 +85,8 @@ export const authConfig = {
       },
     }),
   },
+  pages: {
+    signIn: "/auth/signin",
+    signOut: "/auth/signout",
+  }
 } satisfies NextAuthConfig;

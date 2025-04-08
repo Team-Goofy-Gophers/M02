@@ -4,37 +4,41 @@ import type React from "react";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "~/styles/globals.css";
-
-import { ThemeProvider } from "~/components/providers/theme";
+import CONSTANTS from "~/constants";
+import { Toaster } from "~/components/ui/sonner";
+import { SessionProvider } from "next-auth/react";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "DocuMind - Intelligent Document Processing",
+  title: `${CONSTANTS.APP_NAME} - Intelligent Document Processing`,
   description:
     "Transform unstructured documents into tailored datasets with AI agents",
-  icons: [{ rel: "icon", url: "/favicon.ico" }],
+  icons: [
+    {
+      rel: "icon",
+      url: "/favicon.ico",
+    },
+  ],
 };
 
-export default function RootLayout({
+const RootLayout = ({
   children,
 }: Readonly<{
   children: React.ReactNode;
-}>) {
+}>) => {
   return (
     <html lang="en">
       <body className={inter.className}>
-        <TRPCReactProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="light"
-            enableSystem
-            disableTransitionOnChange
-          >
+        <SessionProvider>
+          <TRPCReactProvider>
             {children}
-          </ThemeProvider>
-        </TRPCReactProvider>
+            <Toaster />
+          </TRPCReactProvider>
+        </SessionProvider>
       </body>
     </html>
   );
-}
+};
+
+export default RootLayout;

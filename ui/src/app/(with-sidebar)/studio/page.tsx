@@ -1,6 +1,5 @@
 import { Button } from "~/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
-import { StudioHeader } from "~/components/studio-header";
 import { DocumentBlocks } from "~/components/document-blocks";
 import { DatasetPanel } from "~/components/dataset-panel";
 import { PromptInterface } from "~/components/prompt-interface";
@@ -9,9 +8,7 @@ import { CollectionsSidebar } from "~/components/collections-sidebar";
 
 export default function StudioPage() {
   return (
-    <div className="flex h-screen flex-col">
-      <StudioHeader />
-
+    <div className="flex h-screen w-full flex-col">
       <div className="flex flex-1 overflow-hidden">
         {/* Collections Sidebar */}
         <CollectionsSidebar />
