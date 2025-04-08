@@ -1,0 +1,32 @@
+# Core
+python-dotenv
+uuid
+tqdm
+
+# CrewAI core
+crewai
+langchain
+langchain-core
+langchain-google-genai
+
+# Gemini
+google-generativeai
+
+# ChromaDB
+chromadb
+
+# File handling
+python-docx
+PyMuPDF
+pytesseract
+Pillow
+
+# CSV/Text parsing
+pandas
+
+# OCR
+pytesseract
+pillow
+
+# CLI/Utils
+rich
