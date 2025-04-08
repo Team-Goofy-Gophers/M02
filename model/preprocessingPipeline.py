@@ -132,7 +132,7 @@ def pipeline(file_path, type, collection_id=None):
             metadata["total_chunks"] = total_chunks
 
             response = requests.post(
-                "http://localhost:9876/addData",
+                f"{os.getenv('DATABASE_URL')}/addData",
                 json={
                     "id": uuid.uuid4().hex,
                     "text": full_markdown,
@@ -153,7 +153,7 @@ def pipeline(file_path, type, collection_id=None):
     elif type == "chatContext":
         try:
             response = requests.post(
-                "http://localhost:9876/addData",
+                f"{os.getenv('DATABASE_URL')}/addData",
                 json={
                     "id": uuid.uuid4().hex,
                     "text": full_markdown,
@@ -168,6 +168,12 @@ def pipeline(file_path, type, collection_id=None):
             print(f"[Error] {e}")
             return None
 
-pipeline(file_path='../testData/letter.docx', type='docContent', collection_id="d916688a60824f6fa76de8b5005bdecc")
+pipeline(file_path='../testData/letter.docx', type='docContent', collection_id="34664749ef4545a1b94f70fb82ee04c0")
+# pipeline(file_path='../testData/cat.jpg', type='docContent', collection_id="34664749ef4545a1b94f70fb82ee04c0")
+# pipeline(file_path='../testData/test-123.pdf', type='docContent', collection_id="34664749ef4545a1b94f70fb82ee04c0")
+# pipeline(file_path='../testData/emc-2.csv', type='docContent', collection_id="34664749ef4545a1b94f70fb82ee04c0")
+# pipeline(file_path='../testData/ss.png', type='docContent', collection_id="34664749ef4545a1b94f70fb82ee04c0")
+# pipeline(file_path='../testData/emc-2.json', type='docContent', collection_id="34664749ef4545a1b94f70fb82ee04c0")
+# pipeline(file_path='../testData/env.txt', type='docContent', collection_id="34664749ef4545a1b94f70fb82ee04c0")
 
 
