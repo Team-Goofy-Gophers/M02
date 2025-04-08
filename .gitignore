@@ -1,3 +1,4 @@
 .env
 testData
 database
+__pycache__
