@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 import chromadb
+from uuid import uuid4
 
 chroma_client = chromadb.PersistentClient(path="./database")
 collection = chroma_client.get_or_create_collection(name="test_collection")
@@ -36,7 +37,7 @@ def add_data():
         return jsonify({"status": "error", "message": "Data with this ID already exists"}), 400
 
     metadata = data.get("meta", {})
-    collection.add(documents=[data['text']], ids=[data['id']], metadatas=[metadata])
+    collection.add(documents=[data['text']], ids=[data['id'] or str(uuid4())], metadatas=[metadata])
 
     return jsonify({"status": "success", "message": "Data added successfully", "data": data}), 201
 
