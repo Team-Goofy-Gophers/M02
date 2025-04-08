@@ -10,7 +10,7 @@ import dotenv
 import re
 import requests
 import uuid
-
+from docx import Document 
 
 dotenv.load_dotenv()
 
@@ -28,6 +28,8 @@ def extract_and_chunk(file_path):
         return chunk_text(pd.read_csv(file_path).to_string(index=False))
     elif filetype == 'application/json':
         return chunk_text(json.dumps(json.load(open(file_path)), indent=2))
+    elif filetype == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':  # Handle .docx
+        return chunk_docx(file_path)
     elif filetype and filetype.startswith('image/'):
         return [handle_image(file_path)]
     else:
@@ -41,6 +43,11 @@ def chunk_pdf(file_path):
 def chunk_text(text):
     paras = text.split("\n\n")
     return ["\n\n".join(paras[i:i+BLOCK_SIZE]) for i in range(0, len(paras), BLOCK_SIZE)]
+
+def chunk_docx(file_path):
+    document = Document(file_path)
+    paragraphs = [p.text for p in document.paragraphs if p.text.strip()]
+    return ["\n\n".join(paragraphs[i:i+BLOCK_SIZE]) for i in range(0, len(paragraphs), BLOCK_SIZE)]
 
 def handle_image(file_path):
     text = pytesseract.image_to_string(Image.open(file_path)).strip()
@@ -131,6 +138,7 @@ def pipeline(file_path, type, collection_id=None):
                     "text": full_markdown,
                     "meta": metadata,
                     "collection_id": collection_id,
+                    type: "docContent"
                 }
             )
             response.raise_for_status()
@@ -151,6 +159,7 @@ def pipeline(file_path, type, collection_id=None):
                     "text": full_markdown,
                     "meta": metadata,
                     "collection_id": collection_id,
+                    type: "chatContext"
                 }
             )
             response.raise_for_status()
@@ -158,4 +167,7 @@ def pipeline(file_path, type, collection_id=None):
         except Exception as e:
             print(f"[Error] {e}")
             return None
+
+pipeline(file_path='../testData/letter.docx', type='docContent', collection_id="d916688a60824f6fa76de8b5005bdecc")
+
 

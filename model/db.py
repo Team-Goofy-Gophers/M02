@@ -55,7 +55,8 @@ def add_data():
         print("Type must be a string")
         return jsonify({"status": "error", "message": "Type must be a string"}), 400
     
-    if data['type'] not in ['chatContext', 'docContent']:
+    data_type = data.get('type', 'docContent')
+    if data_type not in ['chatContext', 'docContent']:
         print("Type must be 'chatContext' or 'docContent'")
         return jsonify({"status": "error", "message": "Type must be 'chatContext' or 'docContent'"}), 400
     
