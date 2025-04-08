@@ -11,6 +11,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "~/components/ui/tooltip";
+import type { inferProcedureOutput } from "@trpc/server";
+import type { AppRouter } from "~/server/api/root";
 
 // Sample data for the dataset
 const initialData = [
@@ -52,7 +54,6 @@ const initialData = [
   },
 ];
 
-// Column definitions
 const columns = [
   { id: "invoiceNumber", name: "Invoice Number", type: "string" },
   { id: "date", name: "Date", type: "date" },
@@ -61,7 +62,13 @@ const columns = [
   { id: "status", name: "Status", type: "string" },
 ];
 
-export function DatasetPanel() {
+const DatasetTab = ({
+  collection,
+}: {
+  collection: NonNullable<
+    inferProcedureOutput<AppRouter["collection"]["getCollection"]>
+  >;
+}) => {
   const [data, setData] = useState(initialData);
   const [editingCell, setEditingCell] = useState<{
     rowId: number | null;
@@ -259,4 +266,6 @@ export function DatasetPanel() {
       </div>
     </div>
   );
-}
+};
+
+export default DatasetTab;

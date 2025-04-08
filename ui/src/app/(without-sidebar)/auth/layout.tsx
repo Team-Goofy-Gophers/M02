@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import type React from "react";
 import { auth } from "~/server/auth";
 
-const AuthLayout = async ({
+const Layout = async ({
   children,
 }: Readonly<{
   children: React.ReactNode;
@@ -14,4 +14,4 @@ const AuthLayout = async ({
   return children;
 };
 
-export default AuthLayout;
+export default Layout;

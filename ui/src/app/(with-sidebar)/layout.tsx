@@ -4,7 +4,7 @@ import AppSidebar from "~/components/appSidebar";
 import { SidebarInset, SidebarProvider } from "~/components/ui/sidebar";
 import { auth } from "~/server/auth";
 
-const ProfileLayout = async ({
+const Layout = async ({
   children,
 }: Readonly<{
   children: React.ReactNode;
@@ -21,4 +21,4 @@ const ProfileLayout = async ({
   );
 };
 
-export default ProfileLayout;
+export default Layout;

@@ -1,11 +1,9 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
-import OverviewTab from "~/components/profile/overviewTab";
 import DocumentsTab from "~/components/profile/documentsTab";
 import DatasetsTab from "~/components/profile/datasetsTab";
-import SettingsTab from "~/components/profile/settingsTab";
 import { api } from "~/trpc/server";
 
-const Profile = async () => {
+const Page = async () => {
   const user = await api.user.me();
 
   if (!user) {
@@ -14,17 +12,11 @@ const Profile = async () => {
 
   return (
     <div className="p-2">
-      <Tabs defaultValue="overview" className="w-full">
+      <Tabs defaultValue="documents" className="w-full">
         <TabsList className="w-full">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
           <TabsTrigger value="datasets">Datasets</TabsTrigger>
-          <TabsTrigger value="settings">Settings</TabsTrigger>
         </TabsList>
-
-        <TabsContent value="overview" className="space-y-6">
-          <OverviewTab />
-        </TabsContent>
 
         <TabsContent value="documents" className="space-y-6">
           <DocumentsTab />
@@ -33,13 +25,9 @@ const Profile = async () => {
         <TabsContent value="datasets" className="space-y-6">
           <DatasetsTab />
         </TabsContent>
-
-        <TabsContent value="settings" className="space-y-6">
-          <SettingsTab />
-        </TabsContent>
       </Tabs>
     </div>
   );
 };
 
-export default Profile;
+export default Page;

@@ -28,12 +28,7 @@ model User {
     accounts Account[]
     sessions Session[]
 
-    UsageStats   UsageStats?
-    UserSettings UserSettings?
-
     Collection Collection[]
-    Prompt     Prompt[]
-    Dataset    Dataset[]
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
@@ -90,19 +85,7 @@ model VerificationToken {
 model AppSettings {
     id String @id @default(cuid())
 
-    howItWorks Json
-
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-}
-
-model UserSettings {
-    userId String @id @unique
-    User   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-    defaultExportFormat DocumentType @default(CSV)
-    hideSensitiveData   Boolean      @default(false)
-    emailNotifications  Boolean      @default(false)
+    howItWorks String @db.Text
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
@@ -117,8 +100,9 @@ model Collection {
     User   User   @relation(fields: [userId], references: [id])
 
     Documents Document[]
-    AgentRuns AgentRun[]
     Prompts   Prompt[]
+    Datasets  Dataset[]
+    Clusters  Cluster[]
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
@@ -127,61 +111,70 @@ model Collection {
 model Document {
     id String @id @default(cuid())
 
-    collectionId String
-    name         String
-    sourceUrl    String?
-    metadata     Json?
+    name      String
+    sourceUrl String?
+    size      Int
 
     type   DocumentType
     status DocumentStatus
 
-    collection Collection @relation(fields: [collectionId], references: [id])
+    clusterId String?
+    Cluster   Cluster? @relation(fields: [clusterId], references: [id])
+
+    collectionId String
+    Collection   Collection @relation(fields: [collectionId], references: [id])
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 }
 
-model AgentRun {
+model Cluster {
     id String @id @default(cuid())
 
-    collectionId  String
-    modelUsed     String
-    startedAt     DateTime  @default(now())
-    finishedAt    DateTime?
-    outputSummary Json?
-    confidenceMap Json?
+    title       String
+    description String
+    summary     String
+    confidence  Float
 
-    status AgentRunStatus
+    agentsUsed String[]
 
-    collection Collection @relation(fields: [collectionId], references: [id])
+    status ClusterStatus
+
+    collectionId String
+    Collection   Collection @relation(fields: [collectionId], references: [id])
+
+    Documents Document[]
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 }
 
 model Prompt {
-    id           String @id @default(cuid())
-    userId       String
-    collectionId String
-    content      String
+    id String @id @default(cuid())
 
-    result     PromptResult?
-    user       User          @relation(fields: [userId], references: [id])
-    collection Collection    @relation(fields: [collectionId], references: [id])
+    content String
+
+    PromptResult PromptResult?
+
+    collectionId String
+    Collection   Collection @relation(fields: [collectionId], references: [id])
+
+    Dataset Dataset[]
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 }
 
 model PromptResult {
-    id        String  @id @default(cuid())
-    promptId  String  @unique
-    tableData Json
+    id String @id @default(cuid())
+
+    tableData Json?
     schema    Json?
     summary   String?
     chartData Json?
 
-    prompt Prompt @relation(fields: [promptId], references: [id])
+    promptId String @unique
+    Prompt   Prompt @relation(fields: [promptId], references: [id])
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
@@ -190,27 +183,15 @@ model PromptResult {
 model Dataset {
     id String @id @default(cuid())
 
-    name         String
-    sourcePrompt String
-    schema       Json
-    rows         Json
+    name   String
+    schema Json
+    rows   Json
 
-    userId String
-    User   User   @relation(fields: [userId], references: [id])
+    promptId     String
+    sourcePrompt Prompt @relation(fields: [promptId], references: [id])
 
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-}
-
-model UsageStats {
-    id             String    @id @default(cuid())
-    totalDocs      Int       @default(0)
-    totalDatasets  Int       @default(0)
-    mostUsedModels Json?
-    lastActive     DateTime?
-
-    userId String @unique
-    User   User   @relation(fields: [userId], references: [id])
+    collectionId String
+    Collection   Collection @relation(fields: [collectionId], references: [id])
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
@@ -233,7 +214,7 @@ enum DocumentStatus {
     FAILED
 }
 
-enum AgentRunStatus {
+enum ClusterStatus {
     PENDING
     RUNNING
     FAILED

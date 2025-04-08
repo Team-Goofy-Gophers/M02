@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Button } from "~/components/ui/button";
 import { ArrowRight, FileText, Database, Zap } from "lucide-react";
 
-const Home = () => {
+const Page = () => {
   return (
     <div className="flex min-h-screen w-full flex-col items-center">
       <section className="mt-16 flex w-full justify-center bg-gradient-to-b from-white to-slate-50 py-20">
@@ -137,4 +137,4 @@ const Home = () => {
   );
 };
 
-export default Home;
+export default Page;

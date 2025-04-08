@@ -2,10 +2,11 @@ import { z } from "zod";
 import {
   createTRPCRouter,
   protectedProcedure,
+  publicProcedure,
 } from "~/server/api/trpc";
 
 export const appSettingsRouter = createTRPCRouter({
-  getHowItWorks: protectedProcedure
+  getHowItWorks: publicProcedure
     .query(async ({ ctx }) => {
       return await ctx.db.appSettings.findFirst({
         select: {

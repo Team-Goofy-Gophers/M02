@@ -58,10 +58,10 @@ const suggestions = [
   "Find all overdue invoices",
 ];
 
-export function PromptInterface() {
+const PromptInterface = () => {
   const [messages, setMessages] = useState(initialMessages);
   const [inputValue, setInputValue] = useState("");
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const handleSendMessage = () => {
     if (inputValue.trim()) {
@@ -199,4 +199,6 @@ export function PromptInterface() {
       </div>
     </div>
   );
-}
+};
+
+export default PromptInterface;

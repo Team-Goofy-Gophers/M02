@@ -27,11 +27,8 @@ import {
   FormMessage,
 } from "~/components/ui/form";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
 
 const SignInCard = () => {
-  const router = useRouter();
-
   const formSchema = signInZ;
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -50,11 +47,10 @@ const SignInCard = () => {
       redirect: false,
     });
     toast.dismiss();
-    if (req?.ok) {
-      toast.success("Signed in successfully");
-      router.push("/profile");
+    if (!req?.ok || req?.error) {
+      toast.error("Wrong credentials!");
     } else {
-      toast.error(req?.error ?? "Something went wrong");
+      toast.success("Signed in successfully");
     }
   };
 

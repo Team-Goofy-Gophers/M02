@@ -1,13 +1,12 @@
 "use client";
 
-import { useState } from "react";
 import { Button } from "~/components/ui/button";
 import { Badge } from "~/components/ui/badge";
 import {
   FileText,
   FileSpreadsheet,
   FileJson,
-  Image,
+  FileImage,
   MoreHorizontal,
   Eye,
   Download,
@@ -66,8 +65,6 @@ const documents = [
 ];
 
 export function DocumentsTable() {
-  const [docs, setDocs] = useState(documents);
-
   const getFileIcon = (type: string) => {
     switch (type) {
       case "PDF":
@@ -79,7 +76,7 @@ export function DocumentsTable() {
       case "JSON":
         return <FileJson className="h-4 w-4 text-yellow-500" />;
       case "Image":
-        return <Image className="h-4 w-4 text-purple-500" />;
+        return <FileImage className="h-4 w-4 text-purple-500" />;
       default:
         return <FileText className="h-4 w-4" />;
     }
@@ -114,7 +111,7 @@ export function DocumentsTable() {
         <div>Status</div>
         <div></div>
       </div>
-      {docs.map((doc) => (
+      {documents.map((doc) => (
         <div
           key={doc.id}
           className="grid grid-cols-[1fr_100px_100px_150px_100px_40px] gap-4 border-b p-4 last:border-0"

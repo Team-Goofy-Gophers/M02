@@ -16,10 +16,14 @@ const ExcalidrawWrapper = dynamic(
 const Page = () => {
   const howItWorks = api.appSettings.getHowItWorks.useQuery();
   const updateHowItWorks = api.appSettings.updateHowItWorks.useMutation();
-
+  console.log(howItWorks.data?.howItWorks);
   return (
     <ExcalidrawWrapper
-      initialData={howItWorks.data?.howItWorks as ExcalidrawInitialDataState}
+      initialData={
+        (JSON.parse(
+          howItWorks.data?.howItWorks ?? "{}",
+        ) as ExcalidrawInitialDataState) ?? {}
+      }
     />
   );
 };

@@ -1,5 +1,5 @@
 import { PrismaAdapter } from "@auth/prisma-adapter";
-import { type DefaultSession, type NextAuthConfig } from "next-auth";
+import { CredentialsSignin, type DefaultSession, type NextAuthConfig } from "next-auth";
 import { env } from "~/env";
 import { db } from "~/server/db";
 import GoogleProvider from "next-auth/providers/google";
@@ -50,13 +50,13 @@ export const authConfig = {
           },
         });
         if (!user) {
-          throw new Error("No user found");
+          throw new CredentialsSignin("No user found");
         }
         if (!user.password) {
-          throw new Error("User has no password");
+          throw new CredentialsSignin("User has no password");
         }
         if (user.password !== await hashAndSalt(password)) {
-          throw new Error("Invalid password");
+          throw new CredentialsSignin("Invalid password");
         }
         return user;
       },

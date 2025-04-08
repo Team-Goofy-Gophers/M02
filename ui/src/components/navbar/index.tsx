@@ -1,5 +1,5 @@
 import React from "react";
-import { Bell, FileText, Search } from "lucide-react";
+import { FileText } from "lucide-react";
 import Link from "next/link";
 import { Button } from "~/components/ui/button";
 import CONSTANTS from "~/constants";
@@ -35,26 +35,18 @@ const Navbar = async () => {
         </div>
 
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon">
-            <Search className="h-5 w-5" />
-            <span className="sr-only">Search</span>
-          </Button>
           {session ? (
-            <>
-              <Button variant="ghost" size="icon">
-                <Bell className="h-5 w-5" />
-                <span className="sr-only">Notifications</span>
-              </Button>
-              <Avatar asChild>
-                <Link href="/profile">
-                  <AvatarImage
-                    src="/placeholder.svg?height=32&width=32"
-                    alt="Avatar"
-                  />
-                  <AvatarFallback>PFP</AvatarFallback>
-                </Link>
-              </Avatar>
-            </>
+            <Avatar asChild>
+              <Link href="/profile">
+                <AvatarImage
+                  src={
+                    session.user.image ?? "/placeholder.svg?height=32&width=32"
+                  }
+                  alt={session.user.name ?? "Avatar"}
+                />
+                <AvatarFallback>PFP</AvatarFallback>
+              </Link>
+            </Avatar>
           ) : (
             <>
               <Link href="/auth/signin">
