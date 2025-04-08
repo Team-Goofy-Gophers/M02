@@ -13,7 +13,7 @@ app = Flask(__name__)
 def log_request():
     print(f"[{request.method}] {request.path} - Body: {request.get_json(silent=True)}")
 
-@app.post('/createCollection')
+@app.get('/createCollection')
 def create_collection():
     # data = request.json
     # if not data or 'name' not in data:
@@ -26,7 +26,7 @@ def create_collection():
     # Check if the collection already exists
     existing_collections = chroma_client.list_collections()
     for collection in existing_collections:
-        if collection['name'] == collection_name:
+        if collection.name == collection_name:
             return jsonify({"status": "error", "message": "Collection already exists"}), 400
     new_collection = chroma_client.get_or_create_collection(name=collection_name)
     return jsonify({"status": "success", "message": "Collection created successfully", "collection_id": collection_name}), 201
@@ -51,7 +51,14 @@ def add_data():
     if not isinstance(data['id'], str):
         print("ID must be a string")
         return jsonify({"status": "error", "message": "ID must be a string"}), 400
-
+    if 'type' in data and not isinstance(data['type'], str):
+        print("Type must be a string")
+        return jsonify({"status": "error", "message": "Type must be a string"}), 400
+    
+    if data['type'] not in ['chatContext', 'docContent']:
+        print("Type must be 'chatContext' or 'docContent'")
+        return jsonify({"status": "error", "message": "Type must be 'chatContext' or 'docContent'"}), 400
+    
     collection_id = data['collection_id']
     collection = chroma_client.get_or_create_collection(name=collection_id)
 
@@ -99,7 +106,7 @@ def search_data():
 
 @app.get('/allData')
 def all_data():
-    collection_id = request.args.get('collection_id')
+    collection_id = request.json.get('collection_id')
     if not collection_id:
         return jsonify({"status": "error", "message": "Collection ID is required"}), 400
     collection = chroma_client.get_or_create_collection(name=collection_id)
