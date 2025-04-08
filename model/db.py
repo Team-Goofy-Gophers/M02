@@ -6,6 +6,12 @@ collection = chroma_client.get_or_create_collection(name="test_collection")
 
 app = Flask(__name__)
 
+
+
+@app.before_request
+def log_request():
+    print(f"[{request.method}] {request.path} - Body: {request.get_json(silent=True)}")
+
 @app.post('/addData')
 def add_data():
     data = request.json
@@ -29,7 +35,9 @@ def add_data():
     if existing['ids']:
         return jsonify({"status": "error", "message": "Data with this ID already exists"}), 400
 
-    collection.add(documents=[data['text']], ids=[data['id']])
+    metadata = data.get("meta", {})
+    collection.add(documents=[data['text']], ids=[data['id']], metadatas=[metadata])
+
     return jsonify({"status": "success", "message": "Data added successfully", "data": data}), 201
 
 @app.get('/getDataById/<string:data_id>')
@@ -55,6 +63,16 @@ def search_data():
         for id_, doc in zip(results['ids'][0], results['documents'][0])
     ]
     return jsonify({"status": "success", "results": data}), 200
+
+@app.get('/allData')
+def all_data():
+    results = collection.get()
+    data = [
+        {"id": id_, "text": doc, "meta": meta}
+        for id_, doc, meta in zip(results["ids"], results["documents"], results["metadatas"])
+    ]
+    return jsonify({"status": "success", "results": data}), 200
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=9876, debug=True)
