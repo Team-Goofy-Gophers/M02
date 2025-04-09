@@ -1,89 +1,102 @@
-# 🚀 HackToFuture 3.0 Repository Setup Guide
-#### To track your progress and collaborate effectively, every team must fork the official repository and follow the steps below.
-<br>
+# DocuThing Crew
 
-# 🔱 Fork the Repository
- #### Go to the GitHub page https://github.com/HackToFuture/HTF-XNN <br>
-  #### Click on the "Fork" button in the upper-right corner of the page.
-  #### Assign the repository name as "HTF - *<Team_Code>*".
+A powerful document processing and query system powered by CrewAI and Large Language Models.
 
-  <img align="center" width = "500" src = "https://docs.github.com/assets/cb-40742/mw-1440/images/help/repository/fork-button.webp" alt="fork image"/>
-  
-  
-  ```
-  Example :
-  <Team_Code> -> A09
-  Repository Name : HTF-A09
+## 📑 Overview
+
+DocuThing Crew is an intelligent document management and query system that can process multiple file formats (PDF, DOCX, Images, Text, CSV), extract their content, store it in a vector database, and provide accurate answers to user queries based solely on the document content.
+
+## ✨ Features
+
+- **Multi-format document processing**: Handles PDF, DOCX, images (via OCR), plain text, and CSV files
+- **Intelligent query processing**: Understands user queries and retrieves relevant information
+- **Vector database storage**: Uses ChromaDB for efficient document storage and retrieval
+- **Source attribution**: All answers include references to the exact source files used
+- **Specialized agent system**: Utilizes a crew of specialized AI agents for each task
+
+## 🏗️ Architecture
+
+The system is built using the CrewAI framework with specialized agents:
+
+### Document Processing Agents
+- **File Type Classifier**: Determines the type of uploaded files
+- **PDF Processor**: Extracts and cleans content from PDF files
+- **DOCX Processor**: Handles Microsoft Word documents
+- **Image OCR Agent**: Extracts text from images using OCR
+- **Text File Processor**: Processes plain text files
+- **CSV Processor**: Converts CSV data into markdown tables
+
+### Query Processing Agents
+- **Store Agent**: Manages ChromaDB storage operations
+- **Query Classifier**: Categorizes user queries for better processing
+- **Schema Generator**: Creates retrieval plans for answering queries
+- **Retrieval Agent**: Extracts relevant information from documents
+- **Synthesis Agent**: Creates comprehensive answers from retrieved information
+
+## 🛠️ Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/docuthing-crew.git
+cd docuthing-crew
+
+# Create and activate a virtual environment (recommended)
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
 ```
 
-# 📥 Clone Your Forked Repository
-  #### Go to your forked repository on GitHub.
-  #### Click the green "Code" button, then click the clipboard icon to copy the URL.
+## ⚙️ Configuration
 
-   <img align="center" width = "500" height="200" src = "https://docs.github.com/assets/cb-60499/mw-1440/images/help/repository/https-url-clone-cli.webp" alt="clone image"/>
- 
-  #### Open your terminal and run the following git clone command to copy the repository to your local machine.
-  #### Replace *repository-url* with the URL of your forked repository.
-  ```
-  git clone <repository-url>
+1. Make sure you have appropriate API keys set in your environment:
+```bash
+export GEMINI_API_KEY=your_api_key_here
 ```
 
+2. Configure ChromaDB settings (if applicable) in your environment variables.
 
-# 🛠️ Start working on your project
-#### Begin building your solution! Collaborate with your teammates and push changes regularly.
+## 🚀 Usage
 
-# 📝 Commit Your Changes
-#### Track and save your progress using Git:
-#### Check the status of your changes
-   ```
-    git status
- ```
-  
+### Document Processing
 
-  #### Use the git add command to stage the changes you want to commit
-  ```
-    git add .
- ```
-      
-  #### Commit with a meaningful message
-  #### *Option 1* : Simple Commit Format (Beginner Friendly)
-  #### Use this if you're new to Git
-   ```
-    git commit -m "Your descriptive commit message"
- ```
-#### *Option 2* : Conventional Commits (Recommended)
-#### Follow this format for more structured, professional commit history  
-```
-git commit -m "<type>(<scope>): <subject>"
-```
-| Type | Purpose |
-|----------|----------|
-| feat    | for a new feature for the user, not a new feature for build script. Such commit will trigger a release bumping a MINOR version    |
-| fix    | for a bug fix for the user, not a fix to a build script. Such commit will trigger a release bumping a PATCH version     |
-| perf    | for performance improvements. Such commit will trigger a release bumping a PATCH version    |
-| docs    | for changes to the documentation     |
-| test | for adding missing tests, refactoring tests; no production code change  |
-| style  | for formatting changes, missing semicolons, etc  |
-| refactor | for refactoring production code, e.g. renaming a variable  |
-| build | for updating build configuration, development tools or other changes irrelevant to the user|
+```python
+from crews.document_crew import DocumentCrew
 
-#### Scope: Area of change (e.g., api, ui, auth)
-#### Subject: One-line summary in present tense, no period at the end
+# Initialize the document processing crew
+doc_crew = DocumentCrew()
 
-```
-Example: git commit -m "fix(button): fix submit button not working"
+# Process a document
+result = doc_crew.process("/path/to/document.pdf")
+print(f"Document processed and stored with ID: {result['document_id']}")
 ```
 
-# 🚀 Push Your Changes
-  #### Send your local commits to GitHub:
-  ```
-    git push origin
- ```
-# 🧠 Tips
-#### *Commit often* : Small, frequent commits help track progress and fix bugs easily.
-#### *Write clear messages* : Describe what you did in each commit.
-#### *Collaborate* : Make sure everyone in your team contributes.
+### Query Processing
 
----
+```python
+from crews.query_crew import QueryCrew
 
-**For any issues or doubts, reach out to the organizing team.** *Happy hacking!* 💻✨
+# Initialize the query processing crew
+query_crew = QueryCrew()
+
+# Ask a question about your documents
+answer = query_crew.ask("What are the key points in the quarterly report?")
+print(answer)
+```
+
+## 📚 Dependencies
+
+- CrewAI
+- Gemini AI (gemini-2.0-flash)
+- ChromaDB 
+- Python 3.9+
+- Various document processing libraries (PyPDF2, python-docx, pytesseract, etc.)
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## 📄 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
